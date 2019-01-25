@@ -1,15 +1,33 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators, AbstractControl} from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn} from '@angular/forms';
 
 import { Customer } from './customer';
 
-// check if the range is a number and it is between 1 and 5
-function ratingRange (c: AbstractControl): { [Key: string]: boolean } | null {
-  if(c.value !== null && (isNaN(c.value) || c.value < 1 || c.value > 5)){
-    return {'range' : true};
+// check if the email and the confirmEmail is the same
+function emailMatcher(c: AbstractControl): {[key: string]: boolean} | null {
+  const emailControl = c.get('email');
+  const confirmControl = c.get('confirmEmail');
+
+  // not return error when the form is iniciate at first
+  if( emailControl.pristine || confirmControl.pristine){
+    return null;
   }
-  // rating is valid
-  return null;
+
+  if(emailControl.value === confirmControl.value){
+    return null;
+  }
+  return {'match' : true};
+}
+
+// check if the range is a number and it is between 1 and 5
+function ratingRange (min: number, max: number): ValidatorFn{ 
+  return (c: AbstractControl): { [Key: string]: boolean } | null  => {
+    if(c.value !== null && (isNaN(c.value) || c.value < min || c.value > max)){
+      return {'range' : true};
+    }
+    // rating is valid
+    return null;
+  }
 }
 
 @Component({
@@ -29,11 +47,15 @@ export class CustomerComponent implements OnInit {
       // cwith validators required y minLength we can delete that validations in the html page
       firstName: ['', [Validators.required, Validators.minLength(3)]],
       lastName: ['', [Validators.required, Validators.maxLength(50)]],
-      email: ['', [Validators.required, Validators.email]],
+      
+      emailGroup: this.fb.group({
+        email: ['', [Validators.required, Validators.email]],
+        confirmEmail: ['', Validators.required]
+      }, {validator: emailMatcher} ), 
       phone: '',
       notification: 'email',
       sendCatalog:true,
-      rating : [null, ratingRange]
+      rating : [null, ratingRange(1,5)]
 
       // if i want a value input disable, i can do that
       //lastName: {value: 'n/a', disabled: true}
