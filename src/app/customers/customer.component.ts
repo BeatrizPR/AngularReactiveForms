@@ -100,6 +100,10 @@ export class CustomerComponent implements OnInit {
     })
   }
 
+  addAddress(): void{
+    this.addresses.push(this.buildAddress());
+  }
+
   populateTestData(): void{
     this.customerForm.patchValue({
       firstName: 'Jack',
